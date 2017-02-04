@@ -16,7 +16,7 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
       return;
     })
     .catch((err: RequestError) => {
-      if(err.error.statusCode == 404) {
+      if(err.response.statusCode == 404) {
         // The index doesn't exists yet! Let's create it
         return client.createOrUpdateIndex(indexName);
       }
