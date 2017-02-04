@@ -28,10 +28,22 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
     });
 }
 
-function indexDocs(client: Client, n: number, offset: number, type: string): Bluebird<any> {
-  return ensureIndex(client, 'manmanga')
+/**
+ * Index n abstracts of Dbpedia's resources of type type,
+ * for the client client in the index indexName,
+ * starting with an offset offset.
+ * If the index doesn't exist yet, it will be created.
+ * @param client The indexden client in which index documents.
+ * @param indexName The index's name in which index documents.
+ * @param n The number of resources to index.
+ * @param offset The offset from which starting to index.
+ * @param type The type of resource to query from Dbpedia.
+ * @returns {Bluebird<any>}
+ */
+export function indexDocs(client: Client, indexName: string, n: number, offset: number, type: string): Bluebird<any> {
+  return ensureIndex(client, indexName)
     .then(() => {
-      return Dbpedia.getResourcesAbstracts(n, offset, 'dbo:manga');
+      return Dbpedia.getResourcesAbstracts(n, offset, type);
     })
     .map((res: any) => {
       // TODO: correctly define types
@@ -42,10 +54,30 @@ function indexDocs(client: Client, n: number, offset: number, type: string): Blu
           title: res.s.value,
           abstract: res.a.value,
           short: false
+        },
+        categories: {
+          type: type
         }
       };
     })
     .map((res: Document.Doc) => {
       return client.indexDocs('manmanga', res);
     });
+}
+
+/**
+ * Executes the promise action until the condition
+ * function returns false.
+ * @param condition The condition while the loop will loop.
+ * @param action The action to perform each times in the loop.
+ * @returns {Bluebird<any>}
+ */
+export function promiseLoop(condition: (params?: any) => boolean, action: (params?: any) => Bluebird<any>) {
+  let loop: any = () => {
+    if(!condition()) {
+      return;
+    }
+    return action().then(loop);
+  };
+  return Bluebird.resolve().then(loop);
 }

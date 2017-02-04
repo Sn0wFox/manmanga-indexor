@@ -1,5 +1,6 @@
-import { Client } from 'indexden-client';
-import * as Lib from './lib';
+import { Client }     from 'indexden-client';
+import * as Bluebird  from 'bluebird';
+import * as Lib       from './lib';
 
 describe('lib', () => {
   let client: Client = new Client(process.env.INDEXDEN_ENDPOINT);
@@ -21,11 +22,29 @@ describe('lib', () => {
         })
         .then(() => {
           done();
-        })
+        });
     });
 
     afterAll(() => {
       jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+    });
+  });
+
+  describe('.promiseLoop()', () => {
+    it('should perform an asynchronous loop', (done: any) => {
+      let end: number = 5;
+      let i: number = 0;
+      Lib.promiseLoop(
+        (): boolean => {
+          return i < end;
+        },
+        (): Bluebird<number> => {
+          return Bluebird.resolve(i++).delay(100);
+        }
+      ).then(() => {
+        expect(i).toBe(end);
+        done();
+      })
     });
   });
 

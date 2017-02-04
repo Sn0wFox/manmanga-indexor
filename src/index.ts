@@ -22,6 +22,28 @@ Bluebird.all([
   ])
   .then(() => {
     // Indexing loop
-    // Lib.indexDocs(client, flat, i * flat, 'dbo:Manga')
-    // And same for anime.
+    let i: number = -1;
+    let flat: number = 100;
+    let type: string = 'dbo:Manga';
+    let num: number = nManga;
+    let done: boolean = false;
+    return Lib.promiseLoop(
+      (): boolean => {
+        i++;
+        if(i * flat < num + flat) {
+          return true;
+        }
+        if(!done) {
+          i = 0;
+          type = 'dbo:Anime';
+          num = nAnime;
+          done = true;
+          return true;
+        }
+        return false;
+      },
+      (): Bluebird<any> => {
+        return Lib.indexDocs(client, 'manmanga', flat, i * flat, type);
+      }
+    )
   });
