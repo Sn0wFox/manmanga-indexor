@@ -3,3 +3,9 @@
 
 # Build folder
 dist
+
+# Node modules
+node_modules
+
+# Other
+npm-debug.log
