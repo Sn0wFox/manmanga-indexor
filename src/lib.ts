@@ -1,6 +1,9 @@
-import * as Bluebird        from 'bluebird';
-import { RequestError }     from 'request-promise/errors';
-import { Client, Indexes }  from 'indexden-client';
+import { RequestError } from 'request-promise/errors';
+import { Client,
+  Indexes,
+  Document }            from 'indexden-client';
+import * as Bluebird    from 'bluebird';
+import * as Dbpedia     from './dbpedia';
 
 /**
  * Ensures that the requested index exists in the given client.
@@ -22,5 +25,27 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
       }
       // There was a much bigger problem, we'd better reject all of it!
       return Bluebird.reject(err);
+    });
+}
+
+function indexDocs(client: Client, n: number, offset: number, type: string): Bluebird<any> {
+  return ensureIndex(client, 'manmanga')
+    .then(() => {
+      return Dbpedia.getResourcesAbstracts(n, offset, 'dbo:manga');
+    })
+    .map((res: any) => {
+      // TODO: correctly define types
+      // TODO: handle too small abstracts (wikipedia scraping)
+      return {
+        docid: res.s.value,
+        fields: {
+          title: res.s.value,
+          abstract: res.a.value,
+          short: false
+        }
+      };
+    })
+    .map((res: Document.Doc) => {
+      return client.indexDocs('manmanga', res);
     });
 }
