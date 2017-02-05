@@ -55,5 +55,5 @@ Bluebird.all([
             return Lib.log(res.toString());
           });
       }
-    )
+    );
   });
