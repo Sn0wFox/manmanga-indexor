@@ -150,6 +150,7 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string>> {
     })
     .catch((err: Error) => {
       // Log error, but we have to continue
+      log('ERROR: enable to find abstract for ' + resource + '.', 'error', err)
       return res;
     });
 }

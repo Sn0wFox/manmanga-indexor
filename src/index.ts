@@ -18,7 +18,8 @@ Bluebird.all([
     .countResources('dbo:Anime')
     .then((n: number) => {
       nAnime = n;
-    })
+    }),
+  Bluebird.resolve(Lib.log('INIT - STARTING INDEXING JOB'))
   ])
   .then(() => {
     // Indexing loop
@@ -43,7 +44,16 @@ Bluebird.all([
         return false;
       },
       (): Bluebird<any> => {
-        return Lib.indexDocs(client, 'manmanga', flat, i * flat, type);
+        return Lib
+          .indexDocs(client, 'manmanga', flat, i * flat, type)
+          .catch((err: Error) => {
+            return Lib.log(
+              'ERROR: Problem indexing ' + flat + ' docs from ' + i*flat + '.',
+              'error', err);
+          })
+          .then((res: any) => {
+            return Lib.log(res.toString());
+          });
       }
     )
   });
