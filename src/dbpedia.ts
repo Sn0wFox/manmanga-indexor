@@ -1,6 +1,7 @@
 import * as Bluebird  from 'bluebird';
 import * as Request   from 'request-promise';
 import * as Url       from 'url';
+import { Map }        from './utils';
 
 const dbpedia_entry_point: string = 'https://dbpedia.org/sparql';
 
@@ -24,7 +25,7 @@ export function countResources(type: string): Bluebird<number> {
       json: true
     }))
     .then((res: any) => {
-      return res.results.bindings[0].count.value;
+      return res.results.bindings[0].count.value || 0;
     });
 }
 
@@ -36,18 +37,19 @@ export function countResources(type: string): Bluebird<number> {
  * @param type The type of the resources to retrieve.
  * @returns {Bluebird<any>}
  */
-export function getResources(n: number, offset: number, type: string): Bluebird<any> {
+export function getResources(n: number, offset: number, type: string): Bluebird<Map<string>[]> {
   let query: string = `
-    select distinct ?s
+    select distinct ?resource
     where {
-      ?s a ${type}.
+      ?resource a ${type}.
     } limit ${n} offset ${offset}`;
   let uri: string = buildQueryUrl(query);
   return Bluebird.resolve(
     Request({
       uri: uri,
       json: true
-    }));
+    }))
+    .then(formatResults);
 }
 
 /**
@@ -57,21 +59,42 @@ export function getResources(n: number, offset: number, type: string): Bluebird<
  * @param offset The offset from which perform the query.
  * @param type The type of the resources to retrieve.
  * @param lang The lang in which query the abstract. Default to english.
- * @returns {Bluebird<any>}
+ * @returns {Bluebird<Map<string>[]>}
  */
-export function getResourcesAbstracts(n: number, offset: number, type: string, lang: string = 'en'): Bluebird<any> {
+export function getResourcesAbstracts(n: number, offset: number, type: string, lang: string = 'en'): Bluebird<Map<string>[]> {
   let query: string = `
-    select distinct ?s ?a
+    select distinct ?resource ?abstract
     where {
-      ?s a ${type}.
-      OPTIONAL {?s dbo:abstract ?a. filter(langMatches(lang(?a), '${lang}'))}.
+      ?resource a ${type}.
+      OPTIONAL {?resource dbo:abstract ?abstract. filter(langMatches(lang(?abstract), '${lang}'))}.
     } limit ${n} offset ${offset}`;
   let uri: string = buildQueryUrl(query);
   return Bluebird.resolve(
     Request({
       uri: uri,
       json: true
-    }));
+    }))
+    .then(formatResults);
+}
+
+function formatResults(response: DbpResponse): Bluebird<Map<string>[]> {
+  if(response.results && response.results.bindings) {
+    return Bluebird
+      .resolve(response.results.bindings)
+      .map(formatOneResult);
+  }
+  return Bluebird.reject(new Error('No resource found'));
+}
+
+function formatOneResult(res: Map<DbpResult>): Map<string> {
+  const map: Map<string> = {};
+  for (const key in res) {
+    if (!res.hasOwnProperty(key)) {
+      continue;
+    }
+    map[key] = res[key].value;
+  }
+  return map;
 }
 
 /**
@@ -82,4 +105,24 @@ export function getResourcesAbstracts(n: number, offset: number, type: string, l
  */
 function buildQueryUrl(query: string, format: string = 'application/json'): string {
   return Url.format(Url.parse(dbpedia_entry_point + "?query=" + query + "&format=" + format));
+}
+
+export interface DbpResponse {
+  head: {
+    link: string[];
+    vars: string[];
+  }
+  results: DbpResults;
+}
+
+export interface DbpResults {
+  distinct: boolean;
+  ordered: boolean;
+  bindings: Map<DbpResult>[];
+}
+
+export interface DbpResult {
+  type: string;
+  value: string;
+  [key: string]: string;
 }
