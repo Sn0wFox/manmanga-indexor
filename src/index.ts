@@ -24,7 +24,7 @@ Bluebird.all([
   .then(() => {
     // Indexing loop
     let i: number = -1;
-    let flat: number = 100;
+    let flat: number = 42;
     let type: string = 'dbo:Manga';
     let num: number = nManga;
     let done: boolean = false;
