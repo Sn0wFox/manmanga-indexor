@@ -4,6 +4,8 @@ import * as Url       from 'url';
 import { Map }        from './utils';
 
 const dbpedia_entry_point: string = 'https://dbpedia.org/sparql';
+const wikipedia_base_url: string =  'https://en.wikipedia.org';
+const dbpedia_base_url: string =    'http://dbpedia.org';
 
 /**
  * Counts the number of known resources being of the type
@@ -77,6 +79,41 @@ export function getResourcesAbstracts(n: number, offset: number, type: string, l
     .then(formatResults);
 }
 
+/**
+ * Transforms a Dbpedia resource's url into a resource's ID.
+ * @param url The url from which extract the resource's ID.
+ * @returns {string}
+ */
+export function resourceUrlToResource(url: string): string {
+  return url.replace(dbpedia_base_url + '/resource/', '');
+}
+
+/**
+ * Transforms a Dbpedia resource's url into a
+ * human readable resource's name.
+ * @param url The url from which extract the resource's name.
+ * @returns {string}
+ */
+export function resourceUrlToResourceName(url: string): string {
+  return resourceUrlToResource(url).replace(/_/g, ' ');
+}
+
+/**
+ * Transforms a Dbpedia resource's url into a wikipedia resource's url.
+ * @param url The url to transform.
+ * @returns {string}
+ */
+export function resourceUrlToWikiUrl(url: string): string {
+  return url.replace(dbpedia_base_url + '/resource/', wikipedia_base_url + '/wiki/');
+}
+
+/**
+ * Format an array of Dbpedia results by flattening
+ * each map of the array by keeping
+ * only the value of the match.
+ * @param response The raw Dbpedia response.
+ * @returns {any}
+ */
 function formatResults(response: DbpResponse): Bluebird<Map<string>[]> {
   if(response.results && response.results.bindings) {
     return Bluebird
@@ -86,6 +123,12 @@ function formatResults(response: DbpResponse): Bluebird<Map<string>[]> {
   return Bluebird.reject(new Error('No resource found'));
 }
 
+/**
+ * Flattens a Dbpedia result from a query by keeping
+ * only the value of the match.
+ * @param res The raw dbpedia query result.
+ * @returns {Map<string>}
+ */
 function formatOneResult(res: Map<DbpResult>): Map<string> {
   const map: Map<string> = {};
   for (const key in res) {
@@ -107,6 +150,11 @@ function buildQueryUrl(query: string, format: string = 'application/json'): stri
   return Url.format(Url.parse(dbpedia_entry_point + "?query=" + query + "&format=" + format));
 }
 
+
+/**
+ * The following interfaces describe a raw Dbpedia response
+ * to a sparql query.
+ */
 export interface DbpResponse {
   head: {
     link: string[];

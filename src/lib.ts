@@ -4,6 +4,8 @@ import { Client,
   Document }            from 'indexden-client';
 import * as Bluebird    from 'bluebird';
 import * as Dbpedia     from './dbpedia';
+import * as Scraper     from './scraper';
+import { Map }          from './utils';
 
 /**
  * Ensures that the requested index exists in the given client.
@@ -45,23 +47,15 @@ export function indexDocs(client: Client, indexName: string, n: number, offset: 
     .then(() => {
       return Dbpedia.getResourcesAbstracts(n, offset, type);
     })
-    .map((res: any) => {
-      // TODO: correctly define types
-      // TODO: handle too small abstracts (wikipedia scraping)
-      return {
-        docid: res.s.value,
-        fields: {
-          title: res.s.value,
-          abstract: res.a.value,
-          short: false
-        },
-        categories: {
-          type: type
-        }
-      };
+    .map(ensureAbstract)
+    .map(resourcesAbstractToDocument)
+    .map((doc: Document.Doc) => {
+      doc.categories = {};
+      doc.categories['type'] = type;
+      return doc;
     })
-    .map((res: Document.Doc) => {
-      return client.indexDocs('manmanga', res);
+    .then((docs: Document.Doc[]) => {
+      return client.indexDocs('manmanga', docs);
     });
 }
 
@@ -80,4 +74,52 @@ export function promiseLoop(condition: (params?: any) => boolean, action: (param
     return action().then(loop);
   };
   return Bluebird.resolve().then(loop);
+}
+
+/**
+ * Transforms a resource with an abstract into an indexable document.
+ * @param res
+ * @returns {{docid: string, fields: {title: string, abstract: string, short: string}}}
+ */
+function resourcesAbstractToDocument(res: Map<string>): Document.Doc {
+  const resource: string = res['resource'];
+  const short: string = res['short'] || 'false';
+  return {
+    docid: resource,
+    fields: {
+      title: Dbpedia.resourceUrlToResourceName(resource),
+      abstract: res['abstract'],
+      short: short
+    }
+  };
+}
+
+/**
+ * Tries by all means to gather an abstract for the
+ * given resource.
+ * If not possible, returns the passed resource
+ * without rejecting the promise.
+ * @param res The resource to verify.
+ * @returns {Bluebird<Map<string>>}
+ */
+function ensureAbstract(res: Map<string>): Bluebird<Map<string>> {
+  const resource: string = res['resource'];
+  const abstract: string = res['abstract'];
+  if(abstract && abstract.length >= 500) {
+    res['short'] = 'false';
+    return Bluebird.resolve(res);
+  }
+  return Scraper
+    .scrape(Dbpedia.resourceUrlToWikiUrl(resource))
+    .then((text: string) => {
+      if(!abstract || text.length >= abstract.length) {
+        res['abstract'] = text;
+      }
+      res['short'] = 'true';
+      return res;
+    })
+    .catch((err: Error) => {
+      // Log error, but we have to continue
+      return res;
+    });
 }

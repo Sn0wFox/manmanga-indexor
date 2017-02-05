@@ -34,4 +34,30 @@ describe('dbpedia lib', () => {
         });
     });
   });
+
+  describe('resource manipulator', () => {
+    describe('.resourceUrlToResource()', () => {
+      it("should extract the resource's ID", () => {
+        expect(
+          Dbpedia.resourceUrlToResource('http://dbpedia.org/resource/Super_Sonico'))
+          .toBe('Super_Sonico');
+      });
+    });
+
+    describe('.resourceUrlToResourceName()', () => {
+      it("should extract the resource's name", () => {
+        expect(
+          Dbpedia.resourceUrlToResourceName('http://dbpedia.org/resource/Super_Sonico_Test'))
+          .toBe('Super Sonico Test');
+      });
+    });
+
+    describe('.resourceUrlToWikiUrl()', () => {
+      it("transform the resource's url into a wikipedia url", () => {
+        expect(
+          Dbpedia.resourceUrlToWikiUrl('http://dbpedia.org/resource/Super_Sonico'))
+          .toBe('https://en.wikipedia.org/wiki/Super_Sonico');
+      });
+    });
+  });
 });
