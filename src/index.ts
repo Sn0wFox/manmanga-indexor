@@ -46,13 +46,13 @@ Bluebird.all([
       (): Bluebird<any> => {
         return Lib
           .indexDocs(client, 'manmanga', flat, i * flat, type)
+          .then((res: any) => {
+            return Lib.log(res.toString());
+          })
           .catch((err: Error) => {
             return Lib.log(
               'ERROR: Problem indexing ' + flat + ' docs from ' + i*flat + '.',
               'error', err);
-          })
-          .then((res: any) => {
-            return Lib.log(res.toString());
           });
       }
     );
