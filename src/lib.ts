@@ -3,9 +3,13 @@ import { Client,
   Indexes,
   Document }            from 'indexden-client';
 import * as Bluebird    from 'bluebird';
+import * as Winston     from 'winston';
+import * as Mkdirp      from 'mkdirp';
 import * as Dbpedia     from './dbpedia';
 import * as Scraper     from './scraper';
 import { Map }          from './utils';
+
+let logger: Winston.LoggerInstance;
 
 /**
  * Ensures that the requested index exists in the given client.
@@ -74,6 +78,32 @@ export function promiseLoop(condition: (params?: any) => boolean, action: (param
     return action().then(loop);
   };
   return Bluebird.resolve().then(loop);
+}
+
+/**
+ * Logs a message in a file under /log/log-date,
+ * with date being the timestamp at which the log file
+ * is created.
+ * @param message The message to log.
+ * @param level The level of the message. Default to info.
+ * @param metadata Eventual metadata to log. Optional.
+ * @param callback Eventual callback. Optional.
+ */
+export function log(message: string, level: string = 'info', metadata?: any, callback?: any): void {
+  if(!logger) {
+    Mkdirp('log', () => {
+      logger = new Winston.Logger({
+        transports: [
+          new Winston.transports.File({
+            filename: 'log/log-' + Date.now()
+          })
+        ]
+      });
+      logger.log(level, message, metadata, callback);
+    });
+  } else {
+    logger.log(level, message, metadata, callback);
+  }
 }
 
 /**

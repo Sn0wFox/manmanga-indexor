@@ -48,4 +48,12 @@ describe('lib', () => {
     });
   });
 
+  describe('.log()', () => {
+    it('should log something', (done: any) => {
+      Lib.log('a log!', 'info', '', () => {
+        done();
+      });
+    });
+  });
+
 });
