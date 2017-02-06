@@ -28,7 +28,7 @@ export function scrape(url: string, content: string = 'p'): Bluebird<string> {
         uri: Url.format(Url.parse(url))
       });
     })
-    .then((html: any) =>{
+    .then((html: any) => {
       lastScrape = Date.now();
       let $ = Cheerio.load(html);
       return $(content).text();

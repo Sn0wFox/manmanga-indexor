@@ -52,6 +52,14 @@ export function indexDocs(client: Client, indexName: string, n: number, offset: 
       return Dbpedia.getResourcesAbstracts(n, offset, type);
     })
     .map(ensureAbstract)
+    .then((res: Map<string>[]) => {
+      for(let i = 0; i < res.length; i++) {
+        if(!res[i]) {
+          res.splice(i, 1);
+        }
+      }
+      return res;
+    })
     .map(resourcesAbstractToDocument)
     .map((doc: Document.Doc) => {
       doc.categories = {};
@@ -127,12 +135,12 @@ function resourcesAbstractToDocument(res: Map<string>): Document.Doc {
 /**
  * Tries by all means to gather an abstract for the
  * given resource.
- * If not possible, returns the passed resource
+ * If not possible, returns undefined
  * without rejecting the promise.
  * @param res The resource to verify.
  * @returns {Bluebird<Map<string>>}
  */
-function ensureAbstract(res: Map<string>): Bluebird<Map<string>> {
+function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
   const resource: string = res['resource'];
   const abstract: string = res['abstract'];
   if(abstract && abstract.length >= 500) {
@@ -150,7 +158,7 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string>> {
     })
     .catch((err: Error) => {
       // Log error, but we have to continue
-      log('ERROR: enable to find abstract for ' + resource + '.', 'error', err)
-      return res;
+      log('INFO: unable to find abstract for ' + resource + '.', 'info');
+      return;
     });
 }

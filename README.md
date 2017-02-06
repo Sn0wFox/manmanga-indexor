@@ -10,6 +10,8 @@ to not rely on Google anymore.
 * Verify doc's fields length in bytes before trying to index.
 * Verify doc's id length in bytes before trying to index.
 * Don't forget to encode urls before querying (see Nagasarete_Airantō).
-* Some resources actually don't have any abstract or page on wikipedia,
+* ~~Some resources actually don't have any abstract or page on wikipedia,
 so they must be removed from the index (see http://dbpedia.org/resource/Gurren_Lagann__manga__1).
-It's - before further investigations - the ones with double underscore.
+It's - before further investigations - the ones with double underscore.~~
+* Some resources are not worth indexing: the ones postfixed by `manga`
+or `(manga)` and so on.
