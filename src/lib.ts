@@ -52,15 +52,10 @@ export function indexDocs(client: Client, indexName: string, n: number, offset: 
       return Dbpedia.getResourcesAbstracts(n, offset, type);
     })
     .map(ensureAbstract)
-    .then((res: Map<string>[]) => {
-      for(let i = 0; i < res.length; i++) {
-        if(!res[i]) {
-          res.splice(i, 1);
-        }
-      }
-      return res;
-    })
+    .then(removeUndefinedFromArray)
     .map(resourcesAbstractToDocument)
+    .map(ensureDocFieldsSizes)
+    .then(removeUndefinedFromArray)
     .map((doc: Document.Doc) => {
       doc.categories = {};
       doc.categories['type'] = type;
@@ -138,7 +133,7 @@ function resourcesAbstractToDocument(res: Map<string>): Document.Doc {
  * If not possible, returns undefined
  * without rejecting the promise.
  * @param res The resource to verify.
- * @returns {Bluebird<Map<string>>}
+ * @returns {Bluebird<Map<string>> | undefined}
  */
 function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
   const resource: string = res['resource'];
@@ -157,8 +152,57 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
       return res;
     })
     .catch((err: Error) => {
-      // Log error, but we have to continue
+      // Log error, but we have to continue,
+      // so return undefined instead.
       log('INFO: unable to find abstract for ' + resource + '.', 'info');
       return;
     });
+}
+
+/**
+ * Verifies that the document has not property value too big
+ * to be indexed.
+ * If the doc's ID is too long (more than 1024 bytes), returns undefined.
+ * If the doc's fields exceed 100kB (utf8), truncates the field 'abstract'.
+ * @param doc The document to verify.
+ * @returns {Doc | undefined}
+ */
+function ensureDocFieldsSizes(doc: Document.Doc): Document.Doc | undefined {
+  // Ensure ID is not more than 1024 bytes
+  if(Buffer.byteLength(doc.docid, 'utf8') > 1024) {
+    // This is not good.
+    // We'd better log error and abort this document.
+    log('ERROR: too long ID for document: ' + doc.docid, 'error');
+    return;
+  }
+  // Ensure size of all fields is not greater than 100kB
+  let size: number = 0;
+  for(let key in doc.fields) {
+    if (!doc.hasOwnProperty(key)) {
+      continue;
+    }
+    size += Buffer.byteLength(doc.fields[key], 'utf8');
+  }
+  if(size > 100000) {
+    // Oops, too long!
+    // Let's just truncate abstract and log error
+    log('INFO: abstract of ' + doc.docid + ' truncated');
+    doc.fields['abstract'] = doc.fields['abstract'].substr(0, size - 100000 - 10) + '...';
+  }
+  return doc;
+}
+
+/**
+ * Removes all undefined values of teh given array,
+ * and returns the cleaned array.
+ * @param array The array to clean.
+ * @returns {T[]}
+ */
+function removeUndefinedFromArray<T>(array: T[]): T[] {
+  for(let i = 0; i < array.length; i++) {
+    if(!array[i]) {
+      array.splice(i, 1);
+    }
+  }
+  return array;
 }
