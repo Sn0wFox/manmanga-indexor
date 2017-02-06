@@ -152,6 +152,15 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
       return res;
     })
     .catch((err: Error) => {
+      // Two solutions here:
+      // 1. Too short abstract but no wiki page
+      // Let's just return the previous resource with short abstract.
+      if(abstract) {
+        res['short'] = 'true';
+        return res;
+      }
+
+      // 2. No abstract AND wiki page
       // Log error, but we have to continue,
       // so return undefined instead.
       log('INFO: unable to find abstract for ' + resource + '.', 'info');
