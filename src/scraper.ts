@@ -2,6 +2,7 @@ import * as Bluebird  from 'bluebird';
 import * as Request   from 'request-promise';
 import * as Url       from 'url';
 import * as Cheerio   from 'cheerio';
+import { log }        from './lib';
 
 let lastScrape: number = 0;
 
@@ -32,5 +33,9 @@ export function scrape(url: string, content: string = 'p'): Bluebird<string> {
       lastScrape = Date.now();
       let $ = Cheerio.load(html);
       return $(content).text();
+    })
+    .catch((err: Error) => {
+      log('ERROR: Scraper.scrape(' + url + ', ' + content + ') errored', 'error');
+      return Bluebird.reject(err);
     });
 }

@@ -1,6 +1,7 @@
 import * as Bluebird  from 'bluebird';
 import * as Request   from 'request-promise';
 import * as Url       from 'url';
+import { log }        from './lib';
 import { Map }        from './utils';
 
 const dbpedia_entry_point: string = 'https://dbpedia.org/sparql';
@@ -28,6 +29,10 @@ export function countResources(type: string): Bluebird<number> {
     }))
     .then((res: any) => {
       return res.results.bindings[0].count.value || 0;
+    })
+    .catch((err: Error) => {
+      log('ERROR: Dbpedia.countResources(' + type + ') errored', 'error');
+      return Bluebird.reject(err);
     });
 }
 
@@ -51,7 +56,11 @@ export function getResources(n: number, offset: number, type: string): Bluebird<
       uri: uri,
       json: true
     }))
-    .then(formatResults);
+    .then(formatResults)
+    .catch((err: Error) => {
+      log('ERROR: Dbpedia.getResources(' + n + ', ' + offset + ', ' + type + ') errored', 'error');
+      return Bluebird.reject(err);
+    });
 }
 
 /**
@@ -76,7 +85,11 @@ export function getResourcesAbstracts(n: number, offset: number, type: string, l
       uri: uri,
       json: true
     }))
-    .then(formatResults);
+    .then(formatResults)
+    .catch((err: Error) => {
+      log('ERROR: Dbpedia.getResourcesAbstracts(' + n + ', ' + offset + ', ' + type + ', ' + lang + ') errored', 'error');
+      return Bluebird.reject(err);
+    });
 }
 
 /**
@@ -118,8 +131,13 @@ function formatResults(response: DbpResponse): Bluebird<Map<string>[]> {
   if(response.results && response.results.bindings) {
     return Bluebird
       .resolve(response.results.bindings)
-      .map(formatOneResult);
+      .map(formatOneResult)
+      .catch((err: Error) => {
+        log('ERROR: Dbpedia.formatResults(' + response + ') errored', 'error');
+        return Bluebird.reject(err);
+      });
   }
+  log('ERROR: Dbpedia.formatResults(' + response + ') errored: No resource found', 'error');
   return Bluebird.reject(new Error('No resource found'));
 }
 

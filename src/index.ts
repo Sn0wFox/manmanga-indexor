@@ -47,12 +47,11 @@ Bluebird.all([
         return Lib
           .indexDocs(client, 'manmanga', flat, i * flat, type)
           .then((res: any) => {
-            return Lib.log(res.toString());
+            return Lib.log("INFO: SUCCESS - successfully indexed files", 'info', res);
           })
           .catch((err: Error) => {
             return Lib.log(
-              'ERROR: Problem indexing ' + flat + ' docs from ' + i*flat + '.',
-              'error', err);
+              'ERROR: Problem indexing ' + flat + ' docs from ' + i*flat + '.', 'error');
           });
       }
     );
