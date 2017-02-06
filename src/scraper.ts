@@ -25,7 +25,7 @@ export function scrape(url: string, content: string = 'p'): Bluebird<string> {
     .then(() => {
       return Request({
         method: 'GET',
-        uri: Url.format(Url.parse(url))
+        uri: Url.parse(encodeURI(url))
       });
     })
     .then((html: any) => {

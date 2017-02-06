@@ -11,7 +11,7 @@ to not rely on Google anymore.
 * ~~Verify doc's id length in bytes before trying to index.~~
 * ~~Fix bug with resource for which there is a too short abstract
 but no wiki page.~~
-* Don't forget to encode urls before querying (see Nagasarete_Airantō).
+* ~~Don't forget to encode urls before querying (see Nagasarete_Airantō).~~
 * ~~Some resources actually don't have any abstract or page on wikipedia,
 so they must be removed from the index (see http://dbpedia.org/resource/Gurren_Lagann__manga__1).
 It's - before further investigations - the ones with double underscore.~~

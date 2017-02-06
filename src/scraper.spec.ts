@@ -10,5 +10,14 @@ describe('Scraper', () => {
           done();
         });
     });
+
+    it('should scrape an url with special character', (done: any) => {
+      Scraper
+        .scrape('https://en.wikipedia.org/wiki/Nagasarete_Airantō')
+        .then((res: string) => {
+          expect(res).toBeTruthy();
+          done();
+        });
+    });
   });
 });

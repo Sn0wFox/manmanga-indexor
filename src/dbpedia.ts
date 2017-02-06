@@ -20,7 +20,7 @@ export function countResources(type: string): Bluebird<number> {
     where {
       ?s a ${type}.
     }`;
-  let uri: string = buildQueryUrl(query);
+  let uri: Url.Url = buildQueryUrl(query);
   return Bluebird.resolve(
     Request({
       uri: uri,
@@ -45,7 +45,7 @@ export function getResources(n: number, offset: number, type: string): Bluebird<
     where {
       ?resource a ${type}.
     } limit ${n} offset ${offset}`;
-  let uri: string = buildQueryUrl(query);
+  let uri: Url.Url = buildQueryUrl(query);
   return Bluebird.resolve(
     Request({
       uri: uri,
@@ -70,7 +70,7 @@ export function getResourcesAbstracts(n: number, offset: number, type: string, l
       ?resource a ${type}.
       OPTIONAL {?resource dbo:abstract ?abstract. filter(langMatches(lang(?abstract), '${lang}'))}.
     } limit ${n} offset ${offset}`;
-  let uri: string = buildQueryUrl(query);
+  let uri: Url.Url = buildQueryUrl(query);
   return Bluebird.resolve(
     Request({
       uri: uri,
@@ -141,13 +141,14 @@ function formatOneResult(res: Map<DbpResult>): Map<string> {
 }
 
 /**
- * Builds a dbpedia query.
+ * Builds a dbpedia query,
+ * verify URI and encode it.
  * @param query The sparql query to perform.
  * @param format The output format expected.
- * @returns {string}
+ * @returns {Url.Url}
  */
-function buildQueryUrl(query: string, format: string = 'application/json'): string {
-  return Url.format(Url.parse(dbpedia_entry_point + "?query=" + query + "&format=" + format));
+function buildQueryUrl(query: string, format: string = 'application/json'): Url.Url {
+  return Url.parse(encodeURI(dbpedia_entry_point + "?query=" + query + "&format=" + format));
 }
 
 
