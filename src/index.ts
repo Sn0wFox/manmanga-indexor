@@ -40,10 +40,10 @@ export function totalIndexing(
         .then((n: number) => {
           nAnime = n;
         }),
-      Bluebird.resolve(Lib.log('INIT - STARTING INDEXING JOB'))
+      Bluebird.resolve(Lib.log('INFO: INIT - starting indexing job'))
     ])
     .then(() => {
-      Lib.log('INFO: starting indexing ' + nManga + ' manga.');
+      Lib.log('INFO - GREAT: starting indexing ' + nManga + ' manga.');
       // Indexing loop
       let i: number = from -1;
       let type: string = 'dbo:Manga';
@@ -65,6 +65,7 @@ export function totalIndexing(
             done = true;
             return true;
           }
+          Lib.log('INFO - GREAT: all anime indexed. DONE.', 'info');
           return false;
         },
         (): Bluebird<any> => {
