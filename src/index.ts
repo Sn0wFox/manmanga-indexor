@@ -68,8 +68,11 @@ export function totalIndexing(
           return false;
         },
         (): Bluebird<any> => {
-          return Lib
-            .indexDocs(client, 'manmanga', flat, i * flat, type)
+          return Bluebird
+            .delay(500)
+            .then(() => {
+              return Lib .indexDocs(client, 'manmanga', flat, i * flat, type);
+            })
             .then((res: any[] | undefined) => {
               failures = 0;
               return Lib.log("INFO: SUCCESS - successfully indexed " + (res ? res.length : '???') + " files from " + i*flat + ".", 'info', res);
