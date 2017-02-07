@@ -8,7 +8,7 @@ import * as Mkdirp      from 'mkdirp';
 import * as Dbpedia     from './dbpedia';
 import { Map }          from './utils';
 
-const default_max_doc_length: number      = 9500;
+const default_max_doc_length: number    = 9500;
 const default_max_docid_length: number  = 1024;
 
 let logger: Winston.LoggerInstance;
@@ -131,7 +131,7 @@ export function log(message: string, level: string = 'info', metadata?: any, cal
 
 /**
  * Transforms a resource with an abstract into an indexable document.
- * @param res
+ * @param res The resource with an abstract. It MUST have fields 'resource' and 'abstract'.
  * @returns {{docid: string, fields: {title: string, abstract: string, short: string}}}
  */
 function resourcesAbstractToDocument(res: Map<string>): Document.Doc {
