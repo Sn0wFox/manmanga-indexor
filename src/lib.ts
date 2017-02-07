@@ -146,46 +146,49 @@ function resourcesAbstractToDocument(res: Map<string>): Document.Doc {
 }
 
 /**
- * Tries by all means to gather an abstract for the
- * given resource.
- * If not possible, returns undefined
+ * Verifies that the given object has an abstract fields,
+ * and annotate its size.
+ * If no abstract is set, returns undefined
  * without rejecting the promise.
  * @param res The resource to verify.
  * @returns {Bluebird<Map<string>> | undefined}
  */
 function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
-  const resource: string = res['resource'];
-  const abstract: string = res['abstract'];
+  //const resource: string = res ? res['resource'] : undefined;
+  const abstract: string = res ? res['abstract'] : undefined;
   if(abstract && abstract.length >= 500) {
     res['short'] = 'false';
-    return Bluebird.resolve(res);
+  } else {
+    res['short'] = 'true';
   }
-  log('INFO: abstract for  ' + resource + ' is too short. Trying to scrape wiki...', 'info');
-  return Scraper
-    .scrape(Dbpedia.resourceUrlToWikiUrl(resource))
-    .then((text: string) => {
-      if(!abstract || text.length >= abstract.length) {
-        res['abstract'] = text;
-      }
-      res['short'] = 'true';
-      return res;
-    })
-    .catch((err: Error) => {
-      // Two solutions here:
-      // 1. Too short abstract but no wiki page
-      // Let's just return the previous resource with short abstract.
-      if(abstract) {
-        log('INFO: no wiki found for ' + resource + '. Keeping smaller abstract.', 'info');
-        res['short'] = 'true';
-        return res;
-      }
-
-      // 2. No abstract AND wiki page
-      // Log error, but we have to continue,
-      // so return undefined instead.
-      log('INFO: unable to find abstract for ' + resource + '.', 'info');
-      return;
-    });
+  return Bluebird.resolve(abstract ? res : undefined);
+  // log('INFO: abstract for  ' + resource + ' is too short. Trying to scrape wiki...', 'info');
+  // TODO: add last scraping time
+  // return Scraper
+  //   .scrape(Dbpedia.resourceUrlToWikiUrl(resource))
+  //   .then((text: string) => {
+  //     if(!abstract || text.length >= abstract.length) {
+  //       res['abstract'] = text;
+  //     }
+  //     res['short'] = 'true';
+  //     return res;
+  //   })
+  //   .catch((err: Error) => {
+  //     // Two solutions here:
+  //     // 1. Too short abstract but no wiki page
+  //     // Let's just return the previous resource with short abstract.
+  //     if(abstract) {
+  //       log('INFO: no wiki found for ' + resource + '. Keeping smaller abstract.', 'info');
+  //       res['short'] = 'true';
+  //       return res;
+  //     }
+  //
+  //     // 2. No abstract AND wiki page
+  //     // Log error, but we have to continue,
+  //     // so return undefined instead.
+  //     log('INFO: unable to find abstract for ' + resource + '.', 'info');
+  //     return;
+  //   });
 }
 
 /**
