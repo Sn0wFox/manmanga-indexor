@@ -6,8 +6,10 @@ import * as Bluebird    from 'bluebird';
 import * as Winston     from 'winston';
 import * as Mkdirp      from 'mkdirp';
 import * as Dbpedia     from './dbpedia';
-import * as Scraper     from './scraper';
 import { Map }          from './utils';
+
+const default_max_doc_length: number      = 9500;
+const default_max_docid_length: number  = 1024;
 
 let logger: Winston.LoggerInstance;
 
@@ -201,7 +203,10 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
  */
 function ensureDocFieldsSizes(doc: Document.Doc): Document.Doc | undefined {
   // Ensure ID is not more than 1024 bytes
-  if(Buffer.byteLength(doc.docid, 'utf8') > 1024) {
+  if(!doc) {
+    return undefined;
+  }
+  if(Buffer.byteLength(doc.docid, 'utf8') > default_max_docid_length) {
     // This is not good.
     // We'd better log error and abort this document.
     log('ERROR: too long ID for document: ' + doc.docid, 'error');
@@ -215,11 +220,11 @@ function ensureDocFieldsSizes(doc: Document.Doc): Document.Doc | undefined {
     }
     size += Buffer.byteLength(doc.fields[key], 'utf8');
   }
-  if(size > 100000) {
+  if(size > default_max_doc_length) {
     // Oops, too long!
     // Let's just truncate abstract and log error
     log('INFO: abstract of ' + doc.docid + ' truncated');
-    doc.fields['abstract'] = doc.fields['abstract'].substr(0, size - 100000 - 10) + '...';
+    doc.fields['abstract'] = doc.fields['abstract'].substr(0, size - default_max_doc_length - 10) + '...';
   }
   return doc;
 }
