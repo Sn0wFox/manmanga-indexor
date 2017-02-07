@@ -4,18 +4,20 @@ import * as Url       from 'url';
 import * as Cheerio   from 'cheerio';
 import { log }        from './lib';
 
-let lastScrape: number = 0;
-const scrapeDelay: number = 800;
+// TODO: transform this in a class
+
+const default_scrape_delay: number = 500;
 
 /**
  * Scrapes the given url and returns the content
  * defined by content as a string.
- * Can't scrape more than 2 times per second.
  * @param url The url of the resource to scrape.
  * @param content The content inside the html to scrape. Default to 'p'.
+ * @param lastScrape The time of the last scraping operation.
+ * @param scrapeDelay The delay between two consecutive scraping operations.
  * @returns {Bluebird<string>}
  */
-export function scrape(url: string, content: string = 'p'): Bluebird<string> {
+export function scrape(url: string, content: string = 'p', lastScrape: number = 0, scrapeDelay: number = default_scrape_delay): Bluebird<string> {
   let delay: number = Date.now() - lastScrape;
   if(delay < scrapeDelay) {
     delay = scrapeDelay - delay;
