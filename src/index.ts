@@ -92,4 +92,4 @@ export function totalIndexing(
     });
 }
 
-totalIndexing.apply(null, process.argv);
+totalIndexing.apply(null, process.argv.slice(2));
