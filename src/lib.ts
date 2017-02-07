@@ -60,6 +60,15 @@ export function indexDocs(client: Client, indexName: string, n: number, offset: 
         .delay(2000)
         .then(() => {
           return Dbpedia.getResourcesAbstracts(n, offset, type);
+        })
+        .catch((err: any) => {
+          // Oops, that's embarrassing: Dbpedia hanged up wo times.
+          log('ERROR: Dbpedia.getResourcesAbstracts() hanged up again. Aborting for now.', 'error', err);
+          // Let's add a custom field to the error and reject it again,
+          // so the further in the chain we will be able do deal with
+          // multiple rejection points
+          err.dbperror = true;
+          return Bluebird.reject(err);
         });
     })
     .map(ensureAbstract)
@@ -72,7 +81,21 @@ export function indexDocs(client: Client, indexName: string, n: number, offset: 
       doc.categories['type'] = type;
       return doc;
     })
+    .catch((err: any) => {
+      if(!err.dbperror) {
+        // This is just that the whole section to index wasn't indexable
+        // Just skip it by returning an empty array
+        log('INFO: No indexable document in this set. Skipping...');
+        return [];
+      }
+      // This was a bigger error. Abort this
+      return Bluebird.reject(err);
+    })
     .then((docs: Document.Doc[]) => {
+      if(!docs || docs.length == 0) {
+        // Nothing to index here. Just skip it
+        return;
+      }
       return client
         .indexDocs('manmanga', docs)
         .catch((err: Error) => {
