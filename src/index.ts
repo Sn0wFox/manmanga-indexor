@@ -70,7 +70,7 @@ export function totalIndexing(
         },
         (): Bluebird<any> => {
           return Bluebird
-            .delay(500)
+            .delay(1000)
             .then(() => {
               return Lib .indexDocs(client, 'manmanga', flat, i * flat, type);
             })
