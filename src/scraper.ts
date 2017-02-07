@@ -5,6 +5,7 @@ import * as Cheerio   from 'cheerio';
 import { log }        from './lib';
 
 let lastScrape: number = 0;
+const scrapeDelay: number = 800;
 
 /**
  * Scrapes the given url and returns the content
@@ -16,8 +17,9 @@ let lastScrape: number = 0;
  */
 export function scrape(url: string, content: string = 'p'): Bluebird<string> {
   let delay: number = Date.now() - lastScrape;
-  if(delay < 500) {
-    delay = 500 - delay;
+  if(delay < scrapeDelay) {
+    delay = scrapeDelay - delay;
+    log('INFO: delaying ' + url + ' scraping for ' + delay + ' ms...', 'info');
   } else {
     delay = 0;
   }
@@ -35,6 +37,7 @@ export function scrape(url: string, content: string = 'p'): Bluebird<string> {
       return $(content).text();
     })
     .catch((err: Error) => {
+      lastScrape = Date.now();
       log('ERROR: Scraper.scrape(' + url + ', ' + content + ') errored', 'error');
       return Bluebird.reject(err);
     });

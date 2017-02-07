@@ -160,6 +160,7 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
     res['short'] = 'false';
     return Bluebird.resolve(res);
   }
+  log('INFO: abstract for  ' + resource + ' is too short. Trying to scrape wiki...', 'info');
   return Scraper
     .scrape(Dbpedia.resourceUrlToWikiUrl(resource))
     .then((text: string) => {
@@ -174,6 +175,7 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
       // 1. Too short abstract but no wiki page
       // Let's just return the previous resource with short abstract.
       if(abstract) {
+        log('INFO: no wiki found for ' + resource + '. Keeping smaller abstract.', 'info');
         res['short'] = 'true';
         return res;
       }
