@@ -27,6 +27,7 @@ export function totalIndexing(
   let nManga: number    = 0;
   let nAnime: number    = 0;
   let failures: number  = 0;
+  from = Math.floor(from/flat);
 
   return Bluebird
     .all([
