@@ -45,7 +45,7 @@ export function totalIndexing(
     ])
     .then(() => {
       // Indexing loop
-      Lib.log('INFO - GREAT: starting indexing ' + nManga + ' manga.');
+      Lib.log('INFO - GREAT: starting indexing ' + nManga + ' manga from ' + from + '.');
       let i: number = from -1;
       let type: string = 'dbo:Manga';
       let num: number = nManga;
