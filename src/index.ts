@@ -43,8 +43,8 @@ export function totalIndexing(
       Bluebird.resolve(Lib.log('INFO: INIT - starting indexing job'))
     ])
     .then(() => {
-      Lib.log('INFO - GREAT: starting indexing ' + nManga + ' manga.');
       // Indexing loop
+      Lib.log('INFO - GREAT: starting indexing ' + nManga + ' manga.');
       let i: number = from -1;
       let type: string = 'dbo:Manga';
       let num: number = nManga;
@@ -65,6 +65,7 @@ export function totalIndexing(
             done = true;
             return true;
           }
+          console.log("end");
           Lib.log('INFO - GREAT: all anime indexed. DONE.', 'info');
           return false;
         },
@@ -72,7 +73,7 @@ export function totalIndexing(
           return Bluebird
             .delay(1000)
             .then(() => {
-              return Lib .indexDocs(client, 'manmanga', flat, i * flat, type);
+              return Lib.indexDocs(client, 'manmanga', flat, i * flat, type);
             })
             .then((res: any[] | undefined) => {
               failures = 0;
@@ -93,4 +94,4 @@ export function totalIndexing(
     });
 }
 
-totalIndexing.apply(null, process.argv.slice(2));
+totalIndexing.apply(null, process.argv.slice(2).map(Number));
