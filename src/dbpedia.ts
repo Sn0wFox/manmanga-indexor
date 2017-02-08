@@ -28,7 +28,7 @@ export function countResources(type: string): Bluebird<number> {
       json: true
     }))
     .then((res: any) => {
-      return res.results.bindings[0].count.value || 0;
+      return +res.results.bindings[0].count.value || 0;
     })
     .catch((err: Error) => {
       log('ERROR: Dbpedia.countResources(' + type + ') errored', 'error');
