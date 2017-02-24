@@ -10,7 +10,7 @@ export type Map<T> = {
 /**
  * Interface for a function supposed to gather resources.
  */
-export type ResourcesGetter = (n: number, from: number, wantedFields?: string[]) => Bluebird<Resource[]>;
+export type ResourcesGetter = (n: number, from: number) => Bluebird<Resource[]>;
 
 /**
  * Executes the promise action until the condition
