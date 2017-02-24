@@ -93,6 +93,9 @@ export function resourcesToDocuments(resources: Resource[]): Document.Doc[] {
     return [];
   }
   return resources.map((resource: Resource) => {
+    if(!resource) {
+      return undefined;
+    }
     let doc: Document.Doc = {
       docid: resource.docid,
       fields: {}
