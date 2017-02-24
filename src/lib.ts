@@ -7,6 +7,7 @@ import * as Winston     from 'winston';
 import * as Mkdirp      from 'mkdirp';
 import * as Dbpedia     from './dbpedia';
 import { Map }          from './utils';
+import any = jasmine.any;
 
 const default_max_doc_length: number    = 9500;
 const default_max_docid_length: number  = 1024;
@@ -37,11 +38,16 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
     });
 }
 
+export function indexResources(client: Client, indexName: string, resources: any[], categories: string[]): Bluebird<any[]> {
+  return Bluebird.reject(new Error('Not implemented yet'));
+}
+
 /**
  * Index n abstracts of Dbpedia's resources of type type,
  * for the client client in the index indexName,
  * starting with an offset offset.
  * If the index doesn't exist yet, it will be created.
+ * @deprecated
  * @param client The indexden client in which index documents.
  * @param indexName The index's name in which index documents.
  * @param n The number of resources to index.

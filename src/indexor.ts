@@ -3,7 +3,8 @@ import * as Bluebird    from 'bluebird';
 
 import * as Lib         from './lib';
 import * as Dbpedia     from './dbpedia';
-import { promiseLoop }  from './utils';
+import { promiseLoop,
+  ResourcesGetter }     from './utils';
 
 export class Indexor {
   // Default values
@@ -38,13 +39,14 @@ export class Indexor {
    * @param maxFails
    * @returns {Bluebird<any>}
    */
-  public manga(
-    from?: number,
-    flat?: number,
-    maxFails?: number
-  ): Bluebird<any> {
-    return this.resourceIndexor('dbo:Manga', from, flat, maxFails);
-  }
+  // public manga(
+  //   from?: number,
+  //   flat?: number,
+  //   maxFails?: number
+  // ): Bluebird<any> {
+  //   return this.resourceIndexor('dbo:Manga', from, flat, maxFails);
+  //   // TODO: Lib.log('INFO - GREAT: all manga indexed. DONE.', 'info');
+  // }
 
   /**
    * Index all indexable dbo:Anime.
@@ -53,54 +55,60 @@ export class Indexor {
    * @param maxFails
    * @returns {Bluebird<any>}
    */
-  public anime(
-    from?: number,
-    flat?: number,
-    maxFails?: number
-  ): Bluebird<any> {
-    return this.resourceIndexor('dbo:Anime', from, flat, maxFails);
-  }
-  
+  // public anime(
+  //   from?: number,
+  //   flat?: number,
+  //   maxFails?: number
+  // ): Bluebird<any> {
+  //   return this.resourceIndexor('dbo:Anime', from, flat, maxFails);
+  // }
+
+  /**
+   * Indexes n resources of gathered by resourcesGetter,
+   * from from and by groups of flat.
+   * If it fails maxFails time, returns immediately
+   * a promise rejection.
+   * @param n The maximum number of resources to index.
+   * @param resourcesGetter The function thanks to which gather the resources.
+   * @param categories The eventual categories of the resources. Optional.
+   * @param wantedFields The fields that the resources must have. Optional.
+   * @param from The first resource to index.
+   * @param flat The size of the group to index at the same time.
+   * @param maxFails The maximum number of failures before rejection.
+   * @returns {Bluebird<any>}
+   */
   protected resourceIndexor(
-    resource: string,
+    n: number,
+    resourcesGetter: ResourcesGetter,
+    categories?: string[],
+    wantedFields?: string[],
     from: number       = Indexor.DEFAULT_START_INDEXING,
     flat: number       = Indexor.DEFAULT_MAX_DOC_PER_INDEXING,
     maxFails: number   = Indexor.DEFAULT_MAX_FAILURES
   ): Bluebird<any> {
 
-    let nManga: number    = 0;
     let failures: number  = 0;
     from = Math.floor(from/flat);
 
-    return Dbpedia
-      .countResources(resource)
-      .then((n: number) => {
-        nManga = n;
-      })
-      .then(() => {
+    return Bluebird
+      .try(() => {
         // Indexing loop
-        Lib.log('INFO - GREAT: starting indexing ' + nManga + ' ' + resource + ' from ' + from + '.');
+        Lib.log('INFO - GREAT: starting indexing ' + n + ' resources from ' + from + '.');
         let i: number = from -1;
-        let num: number = nManga;
         return promiseLoop(
           (): boolean => {
-            i++;
-            if(i * flat < num + flat) {
-              return true;
-            }
-            console.log("end");
-            Lib.log('INFO - GREAT: all manga indexed. DONE.', 'info');
-            return false;
+            i++;  // Just before to ensure operators priority. Safety.
+            return i * flat < n + flat;
           },
           (): Bluebird<any> => {
-            return Bluebird
-              .delay(1000)
-              .then(() => {
-                return Lib.indexDocs(this.client, this.indexName, flat, i * flat, resource);
+            return resourcesGetter(n, from, wantedFields)
+              .then((resources: any[]) => {
+                // TODO: where to handle empty array ? Here or in the call ?
+                return Lib.indexResources(this.client, this.indexName, resources, categories);
               })
               .then((res: any[] | undefined) => {
                 failures = 0;
-                return Lib.log("INFO: SUCCESS - successfully indexed " + (res ? res.length : '???') + " files from " + i*flat + ".", 'info', res);
+                return Lib.log('INFO: SUCCESS - successfully indexed ' + (res ? res.length : '???') + ' files from ' + i*flat + '.', 'info', res);
               })
               .catch((err: Error) => {
                 if(++failures === maxFails) {
