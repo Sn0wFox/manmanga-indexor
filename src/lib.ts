@@ -37,9 +37,43 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
     });
 }
 
-export function indexResources(client: Client, indexName: string, resources: Resource[], categories?: Map<string>): Bluebird<any[]> {
-
-  return Bluebird.reject(new Error('Not implemented yet'));
+/**
+ * Index the given resources.
+ * First, transforms them into documents and happens to each of them
+ * the given categories, if provided.
+ * @param client The client to use.
+ * @param indexName The index to use.
+ * @param resources The resources to index.
+ * @param categories The eventual categories to append to each document. Optional.
+ * @returns {Bluebird<IndexedResult[]|void>}
+ */
+export function indexResources(client: Client, indexName: string, resources: Resource[], categories?: Map<string>): Bluebird<any> {
+  return Bluebird.resolve(
+    resourcesToDocuments(resources).map((doc: Document.Doc) => {
+      doc.categories = categories;
+      return doc;
+    }))
+    .then(removeUndefinedFromArray)
+    .map(ensureDocFieldsSizes)
+    .then(removeUndefinedFromArray)
+    .then((docs: Document.Doc[]) => {
+      if(docs.length === 0) {
+        // Not a problem, there wasn't any indexable document in this set.
+        // Just log it and exit
+        log('INFO: No indexable document in this set. Skipping...');
+        return [];
+      }
+      return client
+        .indexDocs(indexName, docs)
+        .catch((err: Error) => {
+          log('ERROR: Client.indexDocs() hanged up. Retrying after 2000ms...', 'error');
+          return Bluebird
+            .delay(2000)
+            .then(() => {
+              return client.indexDocs(indexName, docs);
+            });
+        });
+    });
 }
 
 /**
