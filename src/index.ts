@@ -1,7 +1,7 @@
 import * as Bluebird  from 'bluebird';
 import { Indexor }    from './indexor';
 
-const indexor: Indexor = new Indexor('manmanga');
+const indexor: Indexor = new Indexor('manmanga2');
 
 /**
  * Indexes every manga and anime.
