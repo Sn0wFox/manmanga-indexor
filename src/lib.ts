@@ -5,6 +5,7 @@ import { Client,
 import * as Bluebird      from 'bluebird';
 import * as Winston       from 'winston';
 import * as Mkdirp        from 'mkdirp';
+import * as _             from 'lodash';
 import * as Dbpedia       from './dbpedia';
 import { Map, Resource }  from './utils';
 
@@ -53,8 +54,8 @@ export function indexResources(client: Client, indexName: string, resources: Res
     .resolve(resources)
     .map(ensureAbstract)
     .then(removeUndefinedFromArray)
-    .then((resources: Resource[]) => {
-      return resourcesToDocuments(resources).map((doc: Document.Doc) => {
+    .then((res: Resource[]) => {
+      return resourcesToDocuments(res).map((doc: Document.Doc) => {
         doc.categories = categories;
         return doc;
       });
@@ -323,13 +324,8 @@ function ensureDocFieldsSizes(doc: Document.Doc): Document.Doc | undefined {
  * Removes all undefined values of teh given array,
  * and returns the cleaned array.
  * @param array The array to clean.
- * @returns {T[]}
+ * @returns {Bluebird<T[]>}
  */
-function removeUndefinedFromArray<T>(array: T[]): T[] {
-  for(let i = 0; i < array.length; i++) {
-    if(!array[i]) {
-      array.splice(i, 1);
-    }
-  }
-  return array;
+function removeUndefinedFromArray<T>(array: T[]): Bluebird<T[]> {
+  return Bluebird.resolve(_.without(array, undefined));
 }
