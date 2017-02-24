@@ -1,13 +1,12 @@
-import { RequestError } from 'request-promise/errors';
+import { RequestError }   from 'request-promise/errors';
 import { Client,
   Indexes,
-  Document }            from 'indexden-client';
-import * as Bluebird    from 'bluebird';
-import * as Winston     from 'winston';
-import * as Mkdirp      from 'mkdirp';
-import * as Dbpedia     from './dbpedia';
-import { Map }          from './utils';
-import any = jasmine.any;
+  Document }              from 'indexden-client';
+import * as Bluebird      from 'bluebird';
+import * as Winston       from 'winston';
+import * as Mkdirp        from 'mkdirp';
+import * as Dbpedia       from './dbpedia';
+import { Map, Resource }  from './utils';
 
 const default_max_doc_length: number    = 9500;
 const default_max_docid_length: number  = 1024;
@@ -38,8 +37,33 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
     });
 }
 
-export function indexResources(client: Client, indexName: string, resources: any[], categories: string[]): Bluebird<any[]> {
+export function indexResources(client: Client, indexName: string, resources: Resource[], categories?: string[]): Bluebird<any[]> {
   return Bluebird.reject(new Error('Not implemented yet'));
+}
+
+/**
+ * Transforms an array of resources to an array of indexable documents.
+ * If the input array is empty or undefined, returns an empty array.
+ * @param resources The array of resources to transform.
+ * @returns {Doc[]}
+ */
+export function resourcesToDocuments(resources: Resource[]): Document.Doc[] {
+  if(!resources || resources.length === 0) {
+    return [];
+  }
+  return resources.map((resource: Resource) => {
+    let doc: Document.Doc = {
+      docid: resource.docid,
+      fields: {}
+    };
+    for (const key in resource) {
+      if (!resource.hasOwnProperty(key)) {
+        continue;
+      }
+      doc.fields[key] = resource[key];
+    }
+    return doc;
+  });
 }
 
 /**

@@ -1,5 +1,6 @@
-import { Client }     from 'indexden-client';
-import * as Lib       from './lib';
+import { Client, Document } from 'indexden-client';
+import { Resource }         from './utils';
+import * as Lib             from './lib';
 
 describe('lib', () => {
   let client: Client = new Client(process.env.INDEXDEN_ENDPOINT);
@@ -36,5 +37,20 @@ describe('lib', () => {
       });
     });
   });
+
+  describe('.resourcesToDocuments()', () => {
+    it('should transform a resource into a document', () => {
+      let resources: Resource[] = [
+        {
+          docid: 'anID',
+          'someField' : 'someValue'
+        }
+      ];
+      let docs: Document.Doc[] = Lib.resourcesToDocuments(resources);
+      expect(docs.length === 1);
+      expect(docs[0].docid).toBe('anID');
+      expect(docs[0].fields['someField']).toBe('someValue');
+    })
+  })
 
 });
