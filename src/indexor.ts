@@ -113,7 +113,7 @@ export class Indexor {
         return Lib
           .ensureIndex(this.client, this.indexName)
           .then(() => {
-            promiseLoop(
+            return promiseLoop(
               (): boolean => {
                 i++;  // Just before to ensure operators priority. Safety.
                 return i * flat < n + flat;
