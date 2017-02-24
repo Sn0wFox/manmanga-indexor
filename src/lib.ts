@@ -97,13 +97,13 @@ export function indexDocs(client: Client, indexName: string, n: number, offset: 
         return;
       }
       return client
-        .indexDocs('manmanga', docs)
+        .indexDocs(indexName, docs)
         .catch((err: Error) => {
           log('ERROR: Client.indexDocs() hanged up. Retrying after 2000ms...', 'error');
           return Bluebird
             .delay(2000)
             .then(() => {
-              return client.indexDocs('manmanga', docs);
+              return client.indexDocs(indexName, docs);
             });
         });
     });
