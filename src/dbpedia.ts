@@ -2,7 +2,9 @@ import * as Bluebird  from 'bluebird';
 import * as Request   from 'request-promise';
 import * as Url       from 'url';
 import { log }        from './lib';
-import { Map }        from './utils';
+import { Map,
+  ResourcesGetter,
+  Resource }          from './utils';
 
 const dbpedia_entry_point: string = 'https://dbpedia.org/sparql';
 const wikipedia_base_url: string =  'https://en.wikipedia.org';
@@ -35,6 +37,42 @@ export function countResources(type: string): Bluebird<number> {
       return Bluebird.reject(err);
     });
 }
+
+/**
+ * Gather n manga from the offset from.
+ * @param n The number of manga to retrieve.
+ * @param from The offset from which retrieve manga.
+ * @returns {Bluebird<Resource[]>}
+ */
+export let getManga : ResourcesGetter = (n: number, from: number) => {
+  let query: string = `
+  SELECT DISTINCT
+      ?docid ?author ?volumes ?publicationDate ?illustrator ?publisher ?abstract
+    WHERE {
+      ?docid a dbo:Manga.
+      OPTIONAL { ?title dbo:author ?author }.
+      OPTIONAL { ?title dbo:numberOfVolumes ?volumes }.
+      OPTIONAL { ?title dbo:firstPublicationDate ?publicationDate }.
+      OPTIONAL { ?title dbo:illustrator ?illustrator }.
+      OPTIONAL { ?title dbo:publisher ?publisher }.
+      OPTIONAL { ?title dbo:abstract ?abstract. filter(langMatches(lang(?abstract),'en')) }. 
+    } limit ${n} offset ${from}`;
+  let uri: Url.Url = buildQueryUrl(query);
+  return Bluebird.resolve(
+    Request({
+      uri: uri,
+      json: true
+    }))
+    .then(formatResults)
+    .map((res: Map<string>) => {
+      // Cast can be done because we know that the map will contain a field docid.
+      return <Resource>res;
+    })
+    .catch((err: Error) => {
+      log('ERROR: Dbpedia.getManga(' + n + ', ' + from + ') errored', 'error');
+      return Bluebird.reject(err);
+    });
+};
 
 /**
  * Get n distinct resources of the type type after the offset offset.
