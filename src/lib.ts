@@ -37,7 +37,8 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
     });
 }
 
-export function indexResources(client: Client, indexName: string, resources: Resource[], categories?: string[]): Bluebird<any[]> {
+export function indexResources(client: Client, indexName: string, resources: Resource[], categories?: Map<string>): Bluebird<any[]> {
+
   return Bluebird.reject(new Error('Not implemented yet'));
 }
 

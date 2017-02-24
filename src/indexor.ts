@@ -5,7 +5,7 @@ import * as Lib       from './lib';
 import {
   promiseLoop,
   ResourcesGetter,
-  Resource }          from './utils';
+  Resource, Map }     from './utils';
 
 export class Indexor {
   // Default values
@@ -81,7 +81,7 @@ export class Indexor {
   protected resourceIndexor(
     n: number,
     resourcesGetter: ResourcesGetter,
-    categories?: string[],
+    categories?: Map<string>,
     wantedFields?: string[],
     from: number       = Indexor.DEFAULT_START_INDEXING,
     flat: number       = Indexor.DEFAULT_MAX_DOC_PER_INDEXING,
