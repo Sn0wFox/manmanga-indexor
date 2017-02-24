@@ -10,7 +10,7 @@ export type Map<T> = {
 /**
  * Interface for a function supposed to gather resources.
  */
-export type ResourcesGetter = (n: number, from: number, wantedFields?: any[]) => Bluebird<any[]>;
+export type ResourcesGetter = (n: number, from: number, wantedFields?: string[]) => Bluebird<Resource[]>;
 
 /**
  * Executes the promise action until the condition
@@ -27,4 +27,14 @@ export function promiseLoop(condition: (params?: any) => boolean, action: (param
     return action().then(loop);
   };
   return Bluebird.resolve().then(loop);
+}
+
+/**
+ * The interface of a resource.
+ * A resource must at least have a docid attribute,
+ * and optionally other attributes of type string.
+ */
+export interface Resource {
+  docid: string;
+  [key: string]: string;
 }

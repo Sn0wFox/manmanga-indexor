@@ -1,10 +1,11 @@
-import { Client }       from 'indexden-client';
-import * as Bluebird    from 'bluebird';
+import { Client }     from 'indexden-client';
+import * as Bluebird  from 'bluebird';
 
-import * as Lib         from './lib';
-import * as Dbpedia     from './dbpedia';
-import { promiseLoop,
-  ResourcesGetter }     from './utils';
+import * as Lib       from './lib';
+import {
+  promiseLoop,
+  ResourcesGetter,
+  Resource }          from './utils';
 
 export class Indexor {
   // Default values
@@ -102,7 +103,7 @@ export class Indexor {
           },
           (): Bluebird<any> => {
             return resourcesGetter(n, from, wantedFields)
-              .then((resources: any[]) => {
+              .then((resources: Resource[]) => {
                 // TODO: where to handle empty array ? Here or in the call ?
                 return Lib.indexResources(this.client, this.indexName, resources, categories);
               })
