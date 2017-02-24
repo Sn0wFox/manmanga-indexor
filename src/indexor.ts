@@ -107,7 +107,12 @@ export class Indexor {
               (): Bluebird<any> => {
                 return resourcesGetter(n, from, wantedFields)
                   .then((resources: Resource[]) => {
-                    // TODO: where to handle empty array ? Here or in the call ?
+                    if(!resources || resources.length === 0) {
+                      // Looks like nothing was indexable in this set.
+                      // Just log the message and skip it
+                      Lib.log('INFO: No indexable document in the current set. Skipping...');
+                      return [];
+                    }
                     return Lib.indexResources(this.client, this.indexName, resources, categories);
                   })
                   .then((res: any[] | undefined) => {
@@ -123,7 +128,8 @@ export class Indexor {
                     }
                     return Lib.log(
                       'ERROR: Problem indexing ' + flat + ' docs from ' + i*flat + '.', 'error');
-                  });
+                  })
+                  .delay(1000);
               });
             });
           });
