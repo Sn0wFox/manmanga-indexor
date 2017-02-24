@@ -1,8 +1,16 @@
 import * as Bluebird  from 'bluebird';
 
+/**
+ * A simple map.
+ */
 export type Map<T> = {
   [key: string]: T
 };
+
+/**
+ * Interface for a function supposed to gather resources.
+ */
+export type ResourcesGetter = (n: number, from: number, wantedFields?: any[]) => Bluebird<any[]>;
 
 /**
  * Executes the promise action until the condition
