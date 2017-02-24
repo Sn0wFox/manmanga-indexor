@@ -2,6 +2,7 @@ import { Client }     from 'indexden-client';
 import * as Bluebird  from 'bluebird';
 
 import * as Lib       from './lib';
+import * as DbPedia   from './dbpedia';
 import {
   promiseLoop,
   ResourcesGetter,
@@ -40,14 +41,21 @@ export class Indexor {
    * @param maxFails
    * @returns {Bluebird<any>}
    */
-  // public manga(
-  //   from?: number,
-  //   flat?: number,
-  //   maxFails?: number
-  // ): Bluebird<any> {
-  //   return this.resourceIndexor('dbo:Manga', from, flat, maxFails);
-  //   // TODO: Lib.log('INFO - GREAT: all manga indexed. DONE.', 'info');
-  // }
+  public manga(
+    from?: number,
+    flat?: number,
+    maxFails?: number
+  ): Bluebird<any> {
+    return DbPedia
+      .countResources('dbo:Manga')
+      .then((n: number) => {
+        return this.resourceIndexor(n, DbPedia.getManga, {'type': 'manga'}, from, flat, maxFails);
+      })
+      .then((res: any) => {
+        Lib.log('INFO - GREAT: all manga indexed from ' + from || Indexor.DEFAULT_START_INDEXING + '.', 'info');
+        return res;
+      });
+  }
 
   /**
    * Index all indexable dbo:Anime.
@@ -56,13 +64,21 @@ export class Indexor {
    * @param maxFails
    * @returns {Bluebird<any>}
    */
-  // public anime(
-  //   from?: number,
-  //   flat?: number,
-  //   maxFails?: number
-  // ): Bluebird<any> {
-  //   return this.resourceIndexor('dbo:Anime', from, flat, maxFails);
-  // }
+  public anime(
+    from?: number,
+    flat?: number,
+    maxFails?: number
+  ): Bluebird<any> {
+    return DbPedia
+      .countResources('dbo:Anime')
+      .then((n: number) => {
+        return this.resourceIndexor(n, DbPedia.getAnime, {'type': 'anime'}, from, flat, maxFails);
+      })
+      .then((res: any) => {
+        Lib.log('INFO - GREAT: all anime indexed from ' + from || Indexor.DEFAULT_START_INDEXING + '.', 'info');
+        return res;
+      });
+  }
 
   /**
    * Indexes n resources of gathered by resourcesGetter,
@@ -72,7 +88,6 @@ export class Indexor {
    * @param n The maximum number of resources to index.
    * @param resourcesGetter The function thanks to which gather the resources.
    * @param categories The eventual categories of the resources. Optional.
-   * @param wantedFields The fields that the resources must have. Optional.
    * @param from The first resource to index.
    * @param flat The size of the group to index at the same time.
    * @param maxFails The maximum number of failures before rejection.
@@ -82,7 +97,6 @@ export class Indexor {
     n: number,
     resourcesGetter: ResourcesGetter,
     categories?: Map<string>,
-    wantedFields?: string[],
     from: number       = Indexor.DEFAULT_START_INDEXING,
     flat: number       = Indexor.DEFAULT_MAX_DOC_PER_INDEXING,
     maxFails: number   = Indexor.DEFAULT_MAX_FAILURES
@@ -105,7 +119,7 @@ export class Indexor {
                 return i * flat < n + flat;
               },
               (): Bluebird<any> => {
-                return resourcesGetter(n, from, wantedFields)
+                return resourcesGetter(n, from)
                   .then((resources: Resource[]) => {
                     if(!resources || resources.length === 0) {
                       // Looks like nothing was indexable in this set.
