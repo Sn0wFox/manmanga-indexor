@@ -35,6 +35,23 @@ describe('dbpedia lib', () => {
     });
   });
 
+  describe('.formatManga()', () => {
+    it('should format a response into a manga', () => {
+      let res = Dbpedia
+        .formatManga({
+          docid: '50',
+          'abstract': 'one|one bigger',
+          publicationDate: '2014-01-03|2014-01-04',
+          'volumes': '6|55'
+        });
+      expect(res).toBeDefined();
+      expect(res['docid']).toBe('50');
+      expect(res['abstract']).toBe('one bigger');
+      expect(res['publicationDate']).toBe('2014-01-04');
+      expect(res['volumes']).toBe('55');
+    });
+  });
+
   describe('resource manipulator', () => {
     describe('.resourceUrlToResource()', () => {
       it("should extract the resource's ID", () => {

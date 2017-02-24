@@ -1,6 +1,7 @@
 import * as Bluebird  from 'bluebird';
 import * as Request   from 'request-promise';
 import * as Url       from 'url';
+import * as _         from 'lodash';
 import { log }        from './lib';
 import { Map,
   ResourcesGetter,
@@ -47,15 +48,61 @@ export function countResources(type: string): Bluebird<number> {
 export let getManga : ResourcesGetter = (n: number, from: number) => {
   let query: string = `
   SELECT DISTINCT
-      ?docid ?author ?volumes ?publicationDate ?illustrator ?publisher ?abstract
+      ?docid
+      group_concat(distinct ?authors;separator="|") as ?author
+      group_concat(distinct ?volume;separator="|") as ?volumes
+      group_concat(distinct ?publicationDates;separator="|") as ?publicationDate
+      group_concat(distinct ?illustrators;separator="|") as ?illustrator
+      group_concat(distinct ?publishers;separator="|") as ?publisher
+      group_concat(distinct ?magazine;separator="|") as ?magazines
+      group_concat(distinct ?genre;separator="|") as ?genres
+      group_concat(distinct ?abstracts;separator="|") as ?abstract
     WHERE {
       ?docid a dbo:Manga.
-      OPTIONAL { ?title dbo:author ?author }.
-      OPTIONAL { ?title dbo:numberOfVolumes ?volumes }.
-      OPTIONAL { ?title dbo:firstPublicationDate ?publicationDate }.
-      OPTIONAL { ?title dbo:illustrator ?illustrator }.
-      OPTIONAL { ?title dbo:publisher ?publisher }.
-      OPTIONAL { ?title dbo:abstract ?abstract. filter(langMatches(lang(?abstract),'en')) }. 
+      OPTIONAL { ?docid dbo:author ?authors }.
+      OPTIONAL { ?docid dbo:numberOfVolumes ?volume }.
+      OPTIONAL { ?docid dbo:firstPublicationDate ?publicationDates }.
+      OPTIONAL { ?docid dbo:illustrator ?illustrators }.
+      OPTIONAL { ?docid dbo:publisher ?publishers }.
+      OPTIONAL { ?docid dbp:magazine ?magazine }.
+      OPTIONAL { ?docid <http://purl.org/dc/terms/subject> ?genres }.
+      OPTIONAL { ?docid dbo:abstract ?abstracts. filter(langMatches(lang(?abstracts),'en')) }. 
+    } LIMIT ${n} OFFSET ${from}`;
+  let uri: Url.Url = buildQueryUrl(query);
+  return Bluebird.resolve(
+    Request({
+      uri: uri,
+      json: true
+    }))
+    .then(formatResults)
+    .map(formatManga)
+    .map((res: Map<string>) => {
+      // Cast can be done because we know that the map will contain a field docid.
+      return <Resource>res;
+    })
+    .catch((err: Error) => {
+      log('ERROR: Dbpedia.getManga(' + n + ', ' + from + ') errored', 'error');
+      return Bluebird.reject(err);
+    });
+};
+
+/**
+ * Gather n anime from the offset from.
+ * @param n The number of anime to retrieve.
+ * @param from The offset from which retrieve anime.
+ * @returns {Bluebird<Resource[]>}
+ */
+export let getAnime : ResourcesGetter = (n: number, from: number) => {
+  let query: string = `
+  SELECT DISTINCT
+      ?docid ?author ?director ?musicComposer ?abstract ?network
+    WHERE {
+      ?docid a dbo:Anime.
+      OPTIONAL { ?docid dbo:writer ?author }.
+      OPTIONAL { ?docid dbo:director ?director }.
+      OPTIONAL { ?docid dbo:musicComposer ?musicComposer }.
+      OPTIONAL { ?docid dbo:network ?network }.
+      OPTIONAL { ?docid dbo:abstract ?abstract. filter(langMatches(lang(?abstract),'en')) }. 
     } limit ${n} offset ${from}`;
   let uri: Url.Url = buildQueryUrl(query);
   return Bluebird.resolve(
@@ -69,7 +116,7 @@ export let getManga : ResourcesGetter = (n: number, from: number) => {
       return <Resource>res;
     })
     .catch((err: Error) => {
-      log('ERROR: Dbpedia.getManga(' + n + ', ' + from + ') errored', 'error');
+      log('ERROR: Dbpedia.getAnime(' + n + ', ' + from + ') errored', 'error');
       return Bluebird.reject(err);
     });
 };
@@ -194,6 +241,43 @@ function formatOneResult(res: Map<DbpResult>): Map<string> {
     map[key] = res[key].value;
   }
   return map;
+}
+
+/**
+ * Formats a Resource coming from a formatted DBPedia response
+ * into a usable manga.
+ * @param res The formatted response to format into a manga.
+ * @returns {Map<string>}
+ */
+export function formatManga(res: Map<string>): Map<string> {
+  const split: string = '|';
+  for (const key in res) {
+    if (!res.hasOwnProperty(key)) {
+      continue;
+    }
+    if(res[key].match(split)) {
+      if(key === 'author' || key === 'publisher' || key === 'illustrator') {
+        // Take the first one
+        res[key] = res[key].split(split)[0];
+        continue;
+      }
+      if(key === 'volumes') {
+        // Take the highest one
+        res[key] = _.maxBy(res[key].split(split), (s: string) => +s);
+        continue;
+      }
+      if(key == 'publicationDate') {
+        // Take the oldest one
+        res[key] = _.last(_.sortBy(res[key].split(split), (s: string) => new Date(s)));
+        continue;
+      }
+      if(key == 'abstract') {
+        // Take the longest one
+        res[key] = _.maxBy(res[key].split(split), (s: string) => s.length);
+      }
+    }
+  }
+  return res;
 }
 
 /**
