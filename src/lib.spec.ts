@@ -10,7 +10,7 @@ describe('lib', () => {
 
     beforeAll(() => {
       originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-      jasmine.DEFAULT_TIMEOUT_INTERVAL = 12000;
+      jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
     });
 
     it('should ensure that the index exists', (done: any) => {
