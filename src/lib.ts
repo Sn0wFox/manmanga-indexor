@@ -234,6 +234,8 @@ function ensureAbstract(res: Map<string>): Bluebird<Map<string> | undefined> {
  * to be indexed.
  * If the doc's ID is too long (more than 1024 bytes), returns undefined.
  * If the doc's fields exceed 100kB (utf8), truncates the field 'abstract'.
+ * If the field abstract can not be truncated for any reasons
+ * (including the fact that it's missing), returns undefined.
  * @param doc The document to verify.
  * @returns {Doc | undefined}
  */
@@ -259,8 +261,15 @@ function ensureDocFieldsSizes(doc: Document.Doc): Document.Doc | undefined {
   if(size > default_max_doc_length) {
     // Oops, too long!
     // Let's just truncate abstract and log error
-    log('INFO: abstract of ' + doc.docid + ' truncated');
-    doc.fields['abstract'] = doc.fields['abstract'].substr(0, size - default_max_doc_length - 10) + '...';
+    if(doc.fields['abstract'] &&  size - default_max_doc_length - 10 < doc.fields['abstract'].length) {
+      log('INFO: abstract of ' + doc.docid + ' truncated');
+      doc.fields['abstract'] = doc.fields['abstract'].substr(0, size - default_max_doc_length - 10) + '...';
+    } else {
+      // That's problematic: we can't truncate the document.
+      // Log an error an returns an undefined object
+      log('INFO: abstract of ' + doc.docid + ' truncated');
+      return undefined;
+    }
   }
   return doc;
 }
