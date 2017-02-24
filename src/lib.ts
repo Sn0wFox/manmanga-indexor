@@ -52,6 +52,7 @@ export function indexResources(client: Client, indexName: string, resources: Res
   return Bluebird
     .resolve(resources)
     .map(ensureAbstract)
+    .then(removeUndefinedFromArray)
     .then((resources: Resource[]) => {
       return resourcesToDocuments(resources).map((doc: Document.Doc) => {
         doc.categories = categories;
