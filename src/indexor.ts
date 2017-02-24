@@ -113,6 +113,7 @@ export class Indexor {
         return Lib
           .ensureIndex(this.client, this.indexName)
           .then(() => {
+            Lib.log('INFO - GREAT: provided index is ready to use');
             return promiseLoop(
               (): boolean => {
                 i++;  // Just before to ensure operators priority. Safety.
@@ -127,6 +128,7 @@ export class Indexor {
                       Lib.log('INFO: No indexable document in the current set. Skipping...');
                       return [];
                     }
+                    Lib.log('INFO: About to index ' + resources.length + ' resources.');
                     return Lib.indexResources(this.client, this.indexName, resources, categories);
                   })
                   .then((res: any[] | undefined) => {

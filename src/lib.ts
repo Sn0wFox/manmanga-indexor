@@ -63,6 +63,7 @@ export function indexResources(client: Client, indexName: string, resources: Res
         log('INFO: No indexable document in this set. Skipping...');
         return [];
       }
+      log('INFO: About to index ' + docs.length + ' documents.');
       return client
         .indexDocs(indexName, docs)
         .catch((err: Error) => {
