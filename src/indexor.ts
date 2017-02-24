@@ -109,7 +109,7 @@ export class Indexor {
       .try(() => {
         // Indexing loop
         Lib.log('INFO - GREAT: starting indexing ' + n + ' resources from ' + from + '.');
-        let i: number = Math.floor(from/flat);
+        let i: number = Math.floor(from/flat) - 1;
         let oops: number = from % flat;
         return Lib
           .ensureIndex(this.client, this.indexName)
