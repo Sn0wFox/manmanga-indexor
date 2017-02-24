@@ -48,11 +48,15 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
  * @returns {Bluebird<IndexedResult[]|void>}
  */
 export function indexResources(client: Client, indexName: string, resources: Resource[], categories?: Map<string>): Bluebird<any> {
-  return Bluebird.resolve(
-    resourcesToDocuments(resources).map((doc: Document.Doc) => {
-      doc.categories = categories;
-      return doc;
-    }))
+  return Bluebird
+    .resolve(resources)
+    .map(ensureAbstract)
+    .then((resources: Resource[]) => {
+      return resourcesToDocuments(resources).map((doc: Document.Doc) => {
+        doc.categories = categories;
+        return doc;
+      });
+    })
     .then(removeUndefinedFromArray)
     .map(ensureDocFieldsSizes)
     .then(removeUndefinedFromArray)
