@@ -1,7 +1,9 @@
-import { Client }     from 'indexden-client';
-import * as Bluebird  from 'bluebird';
-import * as Lib       from './lib';
-import * as Dbpedia   from './dbpedia';
+import { Client }       from 'indexden-client';
+import * as Bluebird    from 'bluebird';
+
+import * as Lib         from './lib';
+import * as Dbpedia     from './dbpedia';
+import { promiseLoop }  from './utils';
 
 export class Indexor {
   // Default values
@@ -80,7 +82,7 @@ export class Indexor {
         Lib.log('INFO - GREAT: starting indexing ' + nManga + ' ' + resource + ' from ' + from + '.');
         let i: number = from -1;
         let num: number = nManga;
-        return Lib.promiseLoop(
+        return promiseLoop(
           (): boolean => {
             i++;
             if(i * flat < num + flat) {
