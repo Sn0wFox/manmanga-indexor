@@ -109,7 +109,8 @@ export class Indexor {
       .try(() => {
         // Indexing loop
         Lib.log('INFO - GREAT: starting indexing ' + n + ' resources from ' + from + '.');
-        let i: number = from -1;
+        let i: number = Math.floor(from/flat);
+        let oops: number = from % flat;
         return Lib
           .ensureIndex(this.client, this.indexName)
           .then(() => {
@@ -120,7 +121,7 @@ export class Indexor {
                 return i * flat < n + flat;
               },
               (): Bluebird<any> => {
-                return resourcesGetter(flat, from)
+                return resourcesGetter(flat, i * flat + oops)
                   .then((resources: Resource[]) => {
                     if(!resources || resources.length === 0) {
                       // Looks like nothing was indexable in this set.
