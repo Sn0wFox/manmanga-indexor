@@ -95,14 +95,19 @@ export let getManga : ResourcesGetter = (n: number, from: number) => {
 export let getAnime : ResourcesGetter = (n: number, from: number) => {
   let query: string = `
   SELECT DISTINCT
-      ?docid ?author ?director ?musicComposer ?abstract ?network
+      ?docid
+      group_concat(distinct ?authors;separator="|") ?author
+      group_concat(distinct ?directors;separator="|") ?director
+      group_concat(distinct ?musicComposers;separator="|") ?musicComposer
+      group_concat(distinct ?networks;separator="|") ?network
+      group_concat(distinct ?abstracts;separator="|") ?abstract 
     WHERE {
       ?docid a dbo:Anime.
-      OPTIONAL { ?docid dbo:writer ?author }.
-      OPTIONAL { ?docid dbo:director ?director }.
-      OPTIONAL { ?docid dbo:musicComposer ?musicComposer }.
-      OPTIONAL { ?docid dbo:network ?network }.
-      OPTIONAL { ?docid dbo:abstract ?abstract. filter(langMatches(lang(?abstract),'en')) }. 
+      OPTIONAL { ?docid dbo:writer ?authors }.
+      OPTIONAL { ?docid dbo:director ?directors }.
+      OPTIONAL { ?docid dbo:musicComposer ?musicComposers }.
+      OPTIONAL { ?docid dbo:network ?networks }.
+      OPTIONAL { ?docid dbo:abstract ?abstracts. filter(langMatches(lang(?abstracts),'en')) }. 
     } limit ${n} offset ${from}`;
   let uri: Url.Url = buildQueryUrl(query);
   return Bluebird.resolve(
@@ -111,6 +116,7 @@ export let getAnime : ResourcesGetter = (n: number, from: number) => {
       json: true
     }))
     .then(formatResults)
+    .map(formatAnime)
     .map((res: Map<string>) => {
       // Cast can be done because we know that the map will contain a field docid.
       return <Resource>res;
@@ -245,7 +251,7 @@ function formatOneResult(res: Map<DbpResult>): Map<string> {
 
 /**
  * Formats a Resource coming from a formatted DBPedia response
- * into a usable manga.
+ * into an usable manga.
  * @param res The formatted response to format into a manga.
  * @returns {Map<string>}
  */
@@ -269,6 +275,33 @@ export function formatManga(res: Map<string>): Map<string> {
       if(key == 'publicationDate') {
         // Take the oldest one
         res[key] = _.last(_.sortBy(res[key].split(split), (s: string) => new Date(s)));
+        continue;
+      }
+      if(key == 'abstract') {
+        // Take the longest one
+        res[key] = _.maxBy(res[key].split(split), (s: string) => s.length);
+      }
+    }
+  }
+  return res;
+}
+
+/**
+ * Formats a Resource coming from a formatted DBPedia response
+ * into an usable anime.
+ * @param res The formatted response to format into an anime.
+ * @returns {Map<string>}
+ */
+export function formatAnime(res: Map<string>): Map<string> {
+  const split: string = '|';
+  for (const key in res) {
+    if (!res.hasOwnProperty(key)) {
+      continue;
+    }
+    if(res[key].match(split)) {
+      if(key === 'author' || key === 'director' || key === 'musicComposer' || key === 'network') {
+        // Take the first one
+        res[key] = res[key].split(split)[0];
         continue;
       }
       if(key == 'abstract') {

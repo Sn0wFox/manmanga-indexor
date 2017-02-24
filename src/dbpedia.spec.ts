@@ -52,6 +52,23 @@ describe('dbpedia lib', () => {
     });
   });
 
+  describe('.formatAnime()', () => {
+    it('should format a response into a manga', () => {
+      let res = Dbpedia
+        .formatAnime({
+          docid: '50',
+          'abstract': 'one|one bigger',
+          director: 'dir1|dir2',
+          'musicComposer': 'mus1|mus2'
+        });
+      expect(res).toBeDefined();
+      expect(res['docid']).toBe('50');
+      expect(res['abstract']).toBe('one bigger');
+      expect(res['director']).toBe('dir1');
+      expect(res['musicComposer']).toBe('mus1');
+    });
+  });
+
   describe('resource manipulator', () => {
     describe('.resourceUrlToResource()', () => {
       it("should extract the resource's ID", () => {
