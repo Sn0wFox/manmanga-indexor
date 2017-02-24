@@ -96,33 +96,36 @@ export class Indexor {
         // Indexing loop
         Lib.log('INFO - GREAT: starting indexing ' + n + ' resources from ' + from + '.');
         let i: number = from -1;
-        return promiseLoop(
-          (): boolean => {
-            i++;  // Just before to ensure operators priority. Safety.
-            return i * flat < n + flat;
-          },
-          (): Bluebird<any> => {
-            return resourcesGetter(n, from, wantedFields)
-              .then((resources: Resource[]) => {
-                // TODO: where to handle empty array ? Here or in the call ?
-                return Lib.indexResources(this.client, this.indexName, resources, categories);
-              })
-              .then((res: any[] | undefined) => {
-                failures = 0;
-                return Lib.log('INFO: SUCCESS - successfully indexed ' + (res ? res.length : '???') + ' files from ' + i*flat + '.', 'info', res);
-              })
-              .catch((err: Error) => {
-                if(++failures === maxFails) {
-                  // Too many consecutive failures
-                  // We'd better abort the whole process
-                  Lib.log('ERROR: FATAL - Too many consecutive failures. Aborting.', 'error', err);
-                  return Bluebird.reject(err);
-                }
-                return Lib.log(
-                  'ERROR: Problem indexing ' + flat + ' docs from ' + i*flat + '.', 'error');
+        return Lib
+          .ensureIndex(this.client, this.indexName)
+          .then(() => {
+            promiseLoop(
+              (): boolean => {
+                i++;  // Just before to ensure operators priority. Safety.
+                return i * flat < n + flat;
+              },
+              (): Bluebird<any> => {
+                return resourcesGetter(n, from, wantedFields)
+                  .then((resources: Resource[]) => {
+                    // TODO: where to handle empty array ? Here or in the call ?
+                    return Lib.indexResources(this.client, this.indexName, resources, categories);
+                  })
+                  .then((res: any[] | undefined) => {
+                    failures = 0;
+                    return Lib.log('INFO: SUCCESS - successfully indexed ' + (res ? res.length : '???') + ' files from ' + i*flat + '.', 'info', res);
+                  })
+                  .catch((err: Error) => {
+                    if(++failures === maxFails) {
+                      // Too many consecutive failures
+                      // We'd better abort the whole process
+                      Lib.log('ERROR: FATAL - Too many consecutive failures. Aborting.', 'error', err);
+                      return Bluebird.reject(err);
+                    }
+                    return Lib.log(
+                      'ERROR: Problem indexing ' + flat + ' docs from ' + i*flat + '.', 'error');
+                  });
               });
-          }
-        );
-      });
+            });
+          });
   }
 }
