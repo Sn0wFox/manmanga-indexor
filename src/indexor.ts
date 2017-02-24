@@ -120,7 +120,7 @@ export class Indexor {
                 return i * flat < n + flat;
               },
               (): Bluebird<any> => {
-                return resourcesGetter(n, from)
+                return resourcesGetter(flat, from)
                   .then((resources: Resource[]) => {
                     if(!resources || resources.length === 0) {
                       // Looks like nothing was indexable in this set.
