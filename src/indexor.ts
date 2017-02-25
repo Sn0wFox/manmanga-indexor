@@ -35,6 +35,14 @@ export class Indexor {
   }
 
   /**
+   * Updates the property indexName.
+   * @param index The new index to use.
+   */
+  public set index(index: string) {
+    this.indexName = index;
+  }
+
+  /**
    * Index all indexable dbo:Manga.
    * @param from
    * @param flat
