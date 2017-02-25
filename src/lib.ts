@@ -41,7 +41,7 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
 
 /**
  * Index the given resources.
- * First, transforms them into documents and happens to each of them
+ * First, transforms them into documents and appends to each of them
  * the given categories, if provided.
  * @param client The client to use.
  * @param indexName The index to use.
