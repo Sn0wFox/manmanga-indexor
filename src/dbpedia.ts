@@ -299,9 +299,8 @@ export function formatAnime(res: Map<string>): Map<string> {
       continue;
     }
     if(res[key].match(split)) {
-      if(key === 'author' || key === 'director' || key === 'musicComposer' || key === 'network') {
+      if(key === 'author' || key === 'director' || key === 'musicComposer') {
         // Take the first one
-        // TODO: keep several networks
         res[key] = res[key].split(split)[0];
         continue;
       }
