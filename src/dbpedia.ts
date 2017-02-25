@@ -96,11 +96,11 @@ export let getAnime : ResourcesGetter = (n: number, from: number) => {
   let query: string = `
   SELECT DISTINCT
       ?docid
-      group_concat(distinct ?authors;separator="|") ?author
-      group_concat(distinct ?directors;separator="|") ?director
-      group_concat(distinct ?musicComposers;separator="|") ?musicComposer
-      group_concat(distinct ?networks;separator="|") ?network
-      group_concat(distinct ?abstracts;separator="|") ?abstract 
+      group_concat(distinct ?authors;separator="|") as ?author
+      group_concat(distinct ?directors;separator="|") as ?director
+      group_concat(distinct ?musicComposers;separator="|") as ?musicComposer
+      group_concat(distinct ?networks;separator="|") as ?network
+      group_concat(distinct ?abstracts;separator="|") as ?abstract
     WHERE {
       ?docid a dbo:Anime.
       OPTIONAL { ?docid dbo:writer ?authors }.
@@ -301,6 +301,7 @@ export function formatAnime(res: Map<string>): Map<string> {
     if(res[key].match(split)) {
       if(key === 'author' || key === 'director' || key === 'musicComposer' || key === 'network') {
         // Take the first one
+        // TODO: keep several networks
         res[key] = res[key].split(split)[0];
         continue;
       }
