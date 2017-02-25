@@ -27,11 +27,10 @@ export function ensureIndex(client: Client, indexName: string): Bluebird<void> {
       // The index already exists, nothing else to do!
       return;
     })
-    .delay(5000)
     .catch((err: RequestError) => {
       if(err.response.statusCode == 404) {
         // The index doesn't exists yet! Let's create it
-        return client.createOrUpdateIndex(indexName);
+        return client.createOrUpdateIndex(indexName).delay(5000);
       }
       // There was a much bigger problem, we'd better reject all of it!
       log('ERROR: lib.ensureIndex(' + client + ', ' + indexName +') errored.');
