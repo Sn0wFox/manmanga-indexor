@@ -43,6 +43,14 @@ export class Indexor {
   }
 
   /**
+   * Gets the index used by this indexor.
+   * @returns {string}
+   */
+  public get index() {
+    return this.indexName;
+  }
+
+  /**
    * Index all indexable dbo:Manga.
    * @param from
    * @param flat
